@@ -162,12 +162,18 @@ GstEncodingProfile *CameraBinVideoEncoder::createProfile()
     QString codec = m_actualVideoSettings.codec();
     QString preset = m_actualVideoSettings.encodingOption(QStringLiteral("preset")).toString();
 
+    int rotation = (-m_session->sensorOrientation() + m_actualVideoSettings.encodingOption(QStringLiteral("rotation")).toInt()) % 360;
+    if (rotation < 0)
+        rotation += 360;
+
     GstCaps *caps;
 
     if (codec.isEmpty())
         caps = 0;
     else
         caps = gst_caps_from_string(codec.toLatin1());
+
+    gst_caps_set_simple(caps, "orientation-angle", G_TYPE_INT, rotation, NULL);
 
     GstEncodingVideoProfile *profile = gst_encoding_video_profile_new(
                 caps,

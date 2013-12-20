@@ -39,7 +39,8 @@ PUBLIC_HEADERS += \
 
 PRIVATE_HEADERS += \
     controls/qmediaplaylistcontrol_p.h \
-    controls/qmediaplaylistsourcecontrol_p.h
+    controls/qmediaplaylistsourcecontrol_p.h \
+    controls/qcamerasensorcontrol_p.h
 
 SOURCES += \
     controls/qcameracapturebufferformatcontrol.cpp \
@@ -77,6 +78,7 @@ SOURCES += \
     controls/qaudioencodersettingscontrol.cpp \
     controls/qaudioinputselectorcontrol.cpp \
     controls/qaudiooutputselectorcontrol.cpp \
-    controls/qvideodeviceselectorcontrol.cpp
+    controls/qvideodeviceselectorcontrol.cpp \
+    controls/qcamerasensorcontrol.cpp
 
 
