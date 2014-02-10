@@ -61,6 +61,9 @@ public:
 
     QSize resolution() const;
 
+Q_SIGNALS:
+    void resolutionChanged(const QSize &resolution);
+
 private:
     QSize m_resolution;
 };

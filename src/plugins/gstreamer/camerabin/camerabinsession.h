@@ -104,6 +104,7 @@ public:
     GstPhotography *photography();
 #endif
     GstElement *cameraBin() { return m_camerabin; }
+    GstElement *cameraSource() { return m_videoSrc; }
     QGstreamerBusHelper *bus() { return m_busHelper; }
 
     CameraRole cameraRole() const;

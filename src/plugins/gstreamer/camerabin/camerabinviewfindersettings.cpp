@@ -87,8 +87,14 @@ QVariant CameraBinViewfinderSettings::viewfinderParameter(ViewfinderParameter pa
 void CameraBinViewfinderSettings::setViewfinderParameter(ViewfinderParameter parameter, const QVariant &value)
 {
     switch (parameter) {
-    case Resolution:
-        m_resolution = value.toSize();
+    case Resolution: {
+        QSize resolution = value.toSize();
+        if (m_resolution != resolution) {
+            m_resolution = resolution;
+            emit resolutionChanged(m_resolution);
+        }
+        break;
+    }
     case PixelAspectRatio:
     case MinimumFrameRate:
     case MaximumFrameRate:
