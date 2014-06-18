@@ -8,8 +8,6 @@ URL:        http://qt.nokia.com
 Source0:    %{name}-%{version}.tar.bz2
 BuildRequires:  qt5-qtcore-devel
 BuildRequires:  qt5-qtgui-devel
-BuildRequires:  qt5-qtwidgets-devel
-BuildRequires:  qt5-qtopengl-devel
 BuildRequires:  qt5-qtnetwork-devel
 BuildRequires:  qt5-qtdeclarative-devel
 BuildRequires:  qt5-qtdeclarative-qtquick-devel
@@ -134,7 +132,7 @@ This package contains the pulse audio sound effect support.
 export QTDIR=/usr/share/qt5
 touch .git
 
-%qmake5
+%qmake5 QT.widgets.name= DEFINES+=QT_NO_WIDGETS
 make %{?_smp_mflags}
 
 %install
@@ -178,19 +176,15 @@ rm -rf %{buildroot}/%{_includedir}/qt5/Qt
 %defattr(-,root,root,-)
 %{_libdir}/libQt5Multimedia.so.5
 %{_libdir}/libQt5Multimedia.so.5.*
-%{_libdir}/libQt5MultimediaWidgets.so.5
-%{_libdir}/libQt5MultimediaWidgets.so.5.*
 %{_libdir}/libQt5MultimediaQuick_p.so.5
 %{_libdir}/libQt5MultimediaQuick_p.so.5.*
 
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/libQt5Multimedia.so
-%{_libdir}/libQt5MultimediaWidgets.so
 %{_libdir}/libQt5MultimediaQuick_p.so
 %{_libdir}/libqgsttools_p.so
 %{_libdir}/libQt5Multimedia.prl
-%{_libdir}/libQt5MultimediaWidgets.prl
 %{_libdir}/libQt5MultimediaQuick_p.prl
 %{_libdir}/libqgsttools_p.prl
 %{_libdir}/pkgconfig/*
