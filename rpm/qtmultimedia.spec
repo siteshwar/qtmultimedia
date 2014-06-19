@@ -10,6 +10,7 @@ BuildRequires:  qt5-qtcore-devel
 BuildRequires:  qt5-qtgui-devel
 BuildRequires:  qt5-qtnetwork-devel
 BuildRequires:  qt5-qtdeclarative-devel
+BuildRequires:  qt5-qttest-devel
 BuildRequires:  qt5-qtdeclarative-qtquick-devel
 BuildRequires:  qt5-qmake
 BuildRequires:  pkgconfig(alsa)
