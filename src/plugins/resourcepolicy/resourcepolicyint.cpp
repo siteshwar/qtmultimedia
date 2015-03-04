@@ -242,22 +242,40 @@ void ResourcePolicyInt::release(const ResourcePolicyImpl *client)
 {
     QMap<const ResourcePolicyImpl*, clientEntry>::iterator i = m_clients.find(client);
     if (i != m_clients.end()) {
-        if (i.value().status == GrantedResource) {
-            i.value().status = Initial;
+        ResourceStatus oldStatus = i.value().status;
+        i.value().status = Initial;
+
+#ifdef RESOURCE_DEBUG
+        qDebug() << "##### " << i.value().id << ": RELEASE";
+#endif
+
+        if (oldStatus == GrantedResource) {
             --m_acquired;
 #ifdef RESOURCE_DEBUG
-            qDebug() << "##### " << i.value().id << ": RELEASE, acquired (" << m_acquired << ")";
+            qDebug() << "##### " << i.value().id << ": RELEASE, acquired (" << m_acquired
+                     << "), emit resourcesReleased()";
 #endif
             emit i.value().client->resourcesReleased();
         }
-    }
 
-    if (m_acquired == 0 && m_status != Initial) {
+        if (m_acquired == 0 && m_status != Initial) {
+            QMap<const ResourcePolicyImpl*, clientEntry>::const_iterator c = m_clients.constBegin();
+            int active = 0;
+
+            while (c != m_clients.constEnd()) {
+                if (c.value().status != Initial)
+                    ++active;
+                ++c;
+            }
+
+            if (active == 0) {
 #ifdef RESOURCE_DEBUG
-        qDebug() << "##### " << i.value().id << ": RELEASE call resourceSet->release()";
+                qDebug() << "##### " << i.value().id << ": RELEASE call resourceSet->release()";
 #endif
-        m_resourceSet->release();
-        m_status = Initial;
+                m_resourceSet->release();
+                m_status = Initial;
+            }
+        }
     }
 }
 
@@ -266,7 +284,8 @@ bool ResourcePolicyInt::isGranted(const ResourcePolicyImpl *client) const
     QMap<const ResourcePolicyImpl*, clientEntry>::const_iterator i = m_clients.find(client);
     if (i != m_clients.constEnd()) {
 #ifdef RESOURCE_DEBUG
-            qDebug() << "##### " << i.value().id << ": IS GRANTED, status: " << i.value().status;
+            qDebug() << "##### " << i.value().id << ": IS GRANTED, status:" << i.value().status
+                     << "granted:" << (i.value().status == GrantedResource);
 #endif
         return i.value().status == GrantedResource;
     }
