@@ -135,25 +135,34 @@ void ResourcePolicyInt::removeClient(ResourcePolicyImpl *client)
 #ifdef RESOURCE_DEBUG
         qDebug() << "##### Remove client " << client << " : " << i.value().id;
 #endif
-        if (i.value().status == GrantedResource)
-            --m_acquired;
-        m_clients.erase(i);
-    }
+        // First release clients resources, if any
+        release(client);
 
-    if (m_acquired == 0 && m_status != Initial) {
+        if (i.value().videoEnabled) {
+            --m_video;
+            if (m_video == 0) {
+                m_resourceSet->deleteResource(ResourcePolicy::VideoPlaybackType);
+                m_resourceSet->update();
+            }
+        }
+
+        m_clients.erase(i);
+
 #ifdef RESOURCE_DEBUG
-        qDebug() << "##### Remove client, acquired = 0, release";
+        qDebug() << "##### Removed client " << client;
 #endif
-        m_resourceSet->release();
-        m_status = Initial;
     }
 }
 
 bool ResourcePolicyInt::isVideoEnabled(const ResourcePolicyImpl *client) const
 {
     QMap<const ResourcePolicyImpl*, clientEntry>::const_iterator i = m_clients.find(client);
-    if (i != m_clients.constEnd())
+    if (i != m_clients.constEnd()) {
+#ifdef RESOURCE_DEBUG
+        qDebug() << "##### isVideoEnabled(" << i.value().id << ") -> " << i.value().videoEnabled;
+#endif
         return i.value().videoEnabled;
+    }
 
     return false;
 }
@@ -167,11 +176,17 @@ void ResourcePolicyInt::setVideoEnabled(const ResourcePolicyImpl *client, bool v
         if (videoEnabled == i.value().videoEnabled)
             return;
 
+#ifdef RESOURCE_DEBUG
+        qDebug() << "##### setVideoEnabled(" << i.value().id << ", " << videoEnabled << ")";
+#endif
+
         if (videoEnabled) {
             if (m_video > 0) {
                 i.value().videoEnabled = true;
             } else {
-                m_resourceSet->addResource(ResourcePolicy::VideoPlaybackType);
+                ResourcePolicy::VideoResource *videoResource = new ResourcePolicy::VideoResource();
+                videoResource->setProcessID(QCoreApplication::applicationPid());
+                m_resourceSet->addResourceObject(videoResource);
                 update = true;
             }
             ++m_video;
@@ -185,7 +200,12 @@ void ResourcePolicyInt::setVideoEnabled(const ResourcePolicyImpl *client, bool v
         }
     }
 
-    if (update)
+#ifdef RESOURCE_DEBUG
+    qDebug() << "##### setVideoEnabled m_video " << m_video;
+    if (update) qDebug() << "      Calling update()";
+#endif
+
+    if (update && m_status != Initial)
         m_resourceSet->update();
 }
 
@@ -242,22 +262,40 @@ void ResourcePolicyInt::release(const ResourcePolicyImpl *client)
 {
     QMap<const ResourcePolicyImpl*, clientEntry>::iterator i = m_clients.find(client);
     if (i != m_clients.end()) {
-        if (i.value().status == GrantedResource) {
-            i.value().status = Initial;
+        ResourceStatus oldStatus = i.value().status;
+        i.value().status = Initial;
+
+#ifdef RESOURCE_DEBUG
+        qDebug() << "##### " << i.value().id << ": RELEASE";
+#endif
+
+        if (oldStatus == GrantedResource) {
             --m_acquired;
 #ifdef RESOURCE_DEBUG
-            qDebug() << "##### " << i.value().id << ": RELEASE, acquired (" << m_acquired << ")";
+            qDebug() << "##### " << i.value().id << ": RELEASE, acquired (" << m_acquired
+                     << "), emit resourcesReleased()";
 #endif
             emit i.value().client->resourcesReleased();
         }
-    }
 
-    if (m_acquired == 0 && m_status != Initial) {
+        if (m_acquired == 0 && m_status != Initial) {
+            QMap<const ResourcePolicyImpl*, clientEntry>::const_iterator c = m_clients.constBegin();
+            int active = 0;
+
+            while (c != m_clients.constEnd()) {
+                if (c.value().status != Initial)
+                    ++active;
+                ++c;
+            }
+
+            if (active == 0) {
 #ifdef RESOURCE_DEBUG
-        qDebug() << "##### " << i.value().id << ": RELEASE call resourceSet->release()";
+                qDebug() << "##### " << i.value().id << ": RELEASE call resourceSet->release()";
 #endif
-        m_resourceSet->release();
-        m_status = Initial;
+                m_resourceSet->release();
+                m_status = Initial;
+            }
+        }
     }
 }
 
@@ -266,7 +304,8 @@ bool ResourcePolicyInt::isGranted(const ResourcePolicyImpl *client) const
     QMap<const ResourcePolicyImpl*, clientEntry>::const_iterator i = m_clients.find(client);
     if (i != m_clients.constEnd()) {
 #ifdef RESOURCE_DEBUG
-            qDebug() << "##### " << i.value().id << ": IS GRANTED, status: " << i.value().status;
+            qDebug() << "##### " << i.value().id << ": IS GRANTED, status:" << i.value().status
+                     << "granted:" << (i.value().status == GrantedResource);
 #endif
         return i.value().status == GrantedResource;
     }
