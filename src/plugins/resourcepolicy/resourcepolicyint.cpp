@@ -135,25 +135,34 @@ void ResourcePolicyInt::removeClient(ResourcePolicyImpl *client)
 #ifdef RESOURCE_DEBUG
         qDebug() << "##### Remove client " << client << " : " << i.value().id;
 #endif
-        if (i.value().status == GrantedResource)
-            --m_acquired;
-        m_clients.erase(i);
-    }
+        // First release clients resources, if any
+        release(client);
 
-    if (m_acquired == 0 && m_status != Initial) {
+        if (i.value().videoEnabled) {
+            --m_video;
+            if (m_video == 0) {
+                m_resourceSet->deleteResource(ResourcePolicy::VideoPlaybackType);
+                m_resourceSet->update();
+            }
+        }
+
+        m_clients.erase(i);
+
 #ifdef RESOURCE_DEBUG
-        qDebug() << "##### Remove client, acquired = 0, release";
+        qDebug() << "##### Removed client " << client;
 #endif
-        m_resourceSet->release();
-        m_status = Initial;
     }
 }
 
 bool ResourcePolicyInt::isVideoEnabled(const ResourcePolicyImpl *client) const
 {
     QMap<const ResourcePolicyImpl*, clientEntry>::const_iterator i = m_clients.find(client);
-    if (i != m_clients.constEnd())
+    if (i != m_clients.constEnd()) {
+#ifdef RESOURCE_DEBUG
+        qDebug() << "##### isVideoEnabled(" << i.value().id << ") -> " << i.value().videoEnabled;
+#endif
         return i.value().videoEnabled;
+    }
 
     return false;
 }
@@ -167,11 +176,17 @@ void ResourcePolicyInt::setVideoEnabled(const ResourcePolicyImpl *client, bool v
         if (videoEnabled == i.value().videoEnabled)
             return;
 
+#ifdef RESOURCE_DEBUG
+        qDebug() << "##### setVideoEnabled(" << i.value().id << ", " << videoEnabled << ")";
+#endif
+
         if (videoEnabled) {
             if (m_video > 0) {
                 i.value().videoEnabled = true;
             } else {
-                m_resourceSet->addResource(ResourcePolicy::VideoPlaybackType);
+                ResourcePolicy::VideoResource *videoResource = new ResourcePolicy::VideoResource();
+                videoResource->setProcessID(QCoreApplication::applicationPid());
+                m_resourceSet->addResourceObject(videoResource);
                 update = true;
             }
             ++m_video;
@@ -185,7 +200,12 @@ void ResourcePolicyInt::setVideoEnabled(const ResourcePolicyImpl *client, bool v
         }
     }
 
-    if (update)
+#ifdef RESOURCE_DEBUG
+    qDebug() << "##### setVideoEnabled m_video " << m_video;
+    if (update) qDebug() << "      Calling update()";
+#endif
+
+    if (update && m_status != Initial)
         m_resourceSet->update();
 }
 
