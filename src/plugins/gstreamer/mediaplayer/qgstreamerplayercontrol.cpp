@@ -372,12 +372,8 @@ void QGstreamerPlayerControl::setMedia(const QMediaContent &content, QIODevice *
     m_session->showPrerollFrames(false); // do not show prerolled frames until pause() or play() explicitly called
     m_setMediaPending = false;
 
-    if (!content.isNull() || stream) {
-        if (!m_resources->isGranted())
-            m_resources->acquire();
-    } else {
+    if (content.isNull() && !stream)
         m_resources->release();
-    }
 
     m_session->stop();
 
