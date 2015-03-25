@@ -150,8 +150,8 @@ void QDeclarativeSoundCone::componentComplete()
 
     This type is part of the \b{QtAudioEngine 1.0} module.
 
-    Sound can be accessed through QtAudioEngine1::AudioEngine::sounds with its unique name
-    and must be defined inside AudioEngine.
+    Sound can be accessed through QtAudioEngine::AudioEngine::sounds with its unique name
+    and must be defined inside AudioEngine or have engine attribute initialized.
 
     \qml
     import QtQuick 2.0
@@ -205,6 +205,7 @@ QDeclarativeSound::QDeclarativeSound(QObject *parent)
     , m_playType(Random)
     , m_attenuationModelObject(0)
     , m_categoryObject(0)
+    , m_engine(0)
 {
     m_cone = new QDeclarativeSoundCone(this);
 }
@@ -215,9 +216,8 @@ QDeclarativeSound::~QDeclarativeSound()
 
 void QDeclarativeSound::classBegin()
 {
-    if (!parent() || !parent()->inherits("QDeclarativeAudioEngine")) {
-        qWarning("Sound must be defined inside AudioEngine!");
-        return;
+    if (parent() && parent()->inherits("QDeclarativeAudioEngine")) {
+        setEngine(qobject_cast<QDeclarativeAudioEngine*>(parent()));
     }
 }
 
@@ -334,6 +334,20 @@ void QDeclarativeSound::setAttenuationModel(QString attenuationModel)
         return;
     }
     m_attenuationModel = attenuationModel;
+}
+
+void QDeclarativeSound::setEngine(QDeclarativeAudioEngine* engine)
+{
+    if (m_complete) {
+        qWarning("Sound: engine not changeable after initialization.");
+        return;
+    }
+    m_engine = engine;
+}
+
+QDeclarativeAudioEngine* QDeclarativeSound::engine() const
+{
+    return m_engine;
 }
 
 QDeclarativeSoundCone* QDeclarativeSound::cone() const
@@ -553,8 +567,13 @@ QDeclarativeSoundInstance* QDeclarativeSound::newInstance()
 
 QDeclarativeSoundInstance* QDeclarativeSound::newInstance(bool managed)
 {
+    if (!m_engine) {
+        qWarning("engine attrbiute must be set for Sound object!");
+        return NULL;
+    }
+
     QDeclarativeSoundInstance *instance =
-            qobject_cast<QDeclarativeAudioEngine*>(this->parent())->newDeclarativeSoundInstance(managed);
+            m_engine->newDeclarativeSoundInstance(managed);
     instance->setSound(m_name);
     return instance;
 }

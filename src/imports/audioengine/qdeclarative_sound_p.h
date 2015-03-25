@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeAudioCategory;
 class QDeclarativeAttenuationModel;
 class QDeclarativeSoundInstance;
+class QDeclarativeAudioEngine;
 
 class QDeclarativeSoundCone : public QObject
 {
@@ -94,6 +95,7 @@ class QDeclarativeSound : public QObject, public QQmlParserStatus
     Q_PROPERTY(QDeclarativeSoundCone* cone READ cone CONSTANT)
     Q_PROPERTY(QString attenuationModel READ attenuationModel WRITE setAttenuationModel)
     Q_PROPERTY(QQmlListProperty<QDeclarativePlayVariation> playVariationlist READ playVariationlist CONSTANT)
+    Q_PROPERTY(QDeclarativeAudioEngine* engine READ engine WRITE setEngine)
     Q_CLASSINFO("DefaultProperty", "playVariationlist")
 
     Q_ENUMS(PlayType)
@@ -121,6 +123,9 @@ public:
 
     QString attenuationModel() const;
     void setAttenuationModel(QString attenuationModel);
+
+    QDeclarativeAudioEngine* engine() const;
+    void setEngine(QDeclarativeAudioEngine*);
 
     QDeclarativeSoundCone* cone() const;
 
@@ -165,6 +170,7 @@ private:
 
     QDeclarativeAttenuationModel *m_attenuationModelObject;
     QDeclarativeAudioCategory *m_categoryObject;
+    QDeclarativeAudioEngine *m_engine;
 };
 
 QT_END_NAMESPACE
