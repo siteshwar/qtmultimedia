@@ -54,7 +54,8 @@ QT_USE_NAMESPACE
     \c AudioSample is part of the \b{QtAudioEngine 1.0} module.
 
     It can be accessed through QtAudioEngine::AudioEngine::samples with its unique
-    name and must be defined inside AudioEngine.
+    name and must be defined inside AudioEngine or have engine attribute
+    initialized.
 
     \qml
     import QtQuick 2.0
@@ -82,6 +83,7 @@ QDeclarativeAudioSample::QDeclarativeAudioSample(QObject *parent)
     , m_streaming(false)
     , m_preloaded(false)
     , m_soundBuffer(0)
+    , m_engine(0)
 {
 }
 
@@ -91,9 +93,8 @@ QDeclarativeAudioSample::~QDeclarativeAudioSample()
 
 void QDeclarativeAudioSample::classBegin()
 {
-    if (!parent() || !parent()->inherits("QDeclarativeAudioEngine")) {
-        qWarning("AudioSample must be defined inside AudioEngine!");
-        return;
+    if (parent() && parent()->inherits("QDeclarativeAudioEngine")) {
+        setEngine(qobject_cast<QDeclarativeAudioEngine*>(parent()));
     }
 }
 
@@ -123,6 +124,11 @@ void QDeclarativeAudioSample::setSource(const QUrl& url)
 bool QDeclarativeAudioSample::isStreaming() const
 {
     return m_streaming;
+}
+
+QDeclarativeAudioEngine* QDeclarativeAudioSample::engine() const
+{
+    return m_engine;
 }
 
 /*!
@@ -185,6 +191,15 @@ void QDeclarativeAudioSample::setStreaming(bool streaming)
     m_streaming = streaming;
 }
 
+void QDeclarativeAudioSample::setEngine(QDeclarativeAudioEngine* engine)
+{
+    if (m_complete) {
+        qWarning("AudioSample: engine not changeable after initialization.");
+        return;
+    }
+    m_engine = engine;
+}
+
 /*!
     \qmlproperty string QtAudioEngine::AudioSample::name
 
@@ -207,12 +222,16 @@ void QDeclarativeAudioSample::setName(const QString& name)
 
 void QDeclarativeAudioSample::init()
 {
+    if (!m_engine) {
+        qWarning("engine attribute must be set for AudioSample object!");
+    }
+
     if (m_streaming) {
         //TODO
 
     } else {
         m_soundBuffer =
-            qobject_cast<QDeclarativeAudioEngine*>(parent())->engine()->getStaticSoundBuffer(m_url);
+            m_engine->engine()->getStaticSoundBuffer(m_url);
         if (m_soundBuffer->isReady()) {
             emit loadedChanged();
         } else {

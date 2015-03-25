@@ -55,8 +55,6 @@ QT_USE_NAMESPACE
 
     This type is part of the \b{QtAudioEngine 1.0} module.
 
-    PlayVariation must be defined inside a \l Sound.
-
     \qml
     import QtQuick 2.0
     import QtAudioEngine 1.0
@@ -115,10 +113,6 @@ QDeclarativePlayVariation::~QDeclarativePlayVariation()
 
 void QDeclarativePlayVariation::classBegin()
 {
-    if (!parent() || !parent()->inherits("QDeclarativeSound")) {
-        qWarning("PlayVariation must be defined inside Sound!");
-        return;
-    }
 }
 
 void QDeclarativePlayVariation::componentComplete()

@@ -40,6 +40,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSoundBuffer;
+class QDeclarativeAudioEngine;
 
 class QDeclarativeAudioSample : public QObject, public QQmlParserStatus
 {
@@ -50,6 +51,7 @@ class QDeclarativeAudioSample : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool preloaded READ isPreloaded WRITE setPreloaded)
     Q_PROPERTY(bool streaming READ isStreaming WRITE setStreaming)
     Q_PROPERTY(bool loaded READ isLoaded NOTIFY loadedChanged)
+    Q_PROPERTY(QDeclarativeAudioEngine* engine READ engine WRITE setEngine)
 
 public:
     QDeclarativeAudioSample(QObject *parent = 0);
@@ -69,6 +71,9 @@ public:
 
     bool isPreloaded() const;
     void setPreloaded(bool preloaded);
+
+    QDeclarativeAudioEngine* engine() const;
+    void setEngine(QDeclarativeAudioEngine*);
 
     bool isLoaded() const;
 
@@ -90,6 +95,7 @@ private:
     QUrl m_url;
     bool m_streaming;
     bool m_preloaded;
+    QDeclarativeAudioEngine *m_engine;
 
     QSoundBuffer *m_soundBuffer;
 };

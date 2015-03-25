@@ -50,11 +50,6 @@ QDeclarativeAttenuationModel::~QDeclarativeAttenuationModel()
 
 void QDeclarativeAttenuationModel::classBegin()
 {
-    if (!parent() || !parent()->inherits("QDeclarativeAudioEngine")) {
-        qWarning("AttenuationModel must be defined inside AudioEngine!");
-        //TODO: COMPILE_EXCEPTION ?
-        return;
-    }
 }
 
 void QDeclarativeAttenuationModel::componentComplete()
@@ -92,8 +87,6 @@ void QDeclarativeAttenuationModel::setName(const QString& name)
     \preliminary
 
     This type is part of the \b{QtAudioEngine 1.0} module.
-
-    AttenuationModelLinear must be defined inside \l AudioEngine.
 
     \qml
     import QtQuick 2.0
@@ -225,8 +218,6 @@ qreal QDeclarativeAttenuationModelLinear::calculateGain(const QVector3D &listene
     \preliminary
 
     This type is part of the \b{QtAudioEngine 1.0} module.
-
-    AttenuationModelInverse must be defined inside AudioEngine.
 
     \qml
     import QtQuick 2.0
