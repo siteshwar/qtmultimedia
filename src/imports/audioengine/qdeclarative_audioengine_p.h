@@ -119,6 +119,9 @@ public:
     QSoundInstance* newSoundInstance(const QString &name);
     void releaseSoundInstance(QSoundInstance* instance);
 
+    Q_INVOKABLE void addAudioSample(QDeclarativeAudioSample*);
+    Q_INVOKABLE void addSound(QDeclarativeSound*);
+
 Q_SIGNALS:
     void ready();
     void liveInstanceCountChanged();
