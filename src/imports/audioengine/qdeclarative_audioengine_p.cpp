@@ -221,6 +221,50 @@ void QDeclarativeAudioEngine::releaseSoundInstance(QSoundInstance* instance)
     emit liveInstanceCountChanged();
 }
 
+void QDeclarativeAudioEngine::addAudioSample(QDeclarativeAudioSample *sample)
+{
+    sample->init();
+}
+
+void QDeclarativeAudioEngine::addSound(QDeclarativeSound *sound)
+{
+    qWarning() << "ADDING SOUND";
+    QDeclarativeAudioCategory *category = m_defaultCategory;
+    if (m_categories.contains(sound->category())) {
+        category = qobject_cast<QDeclarativeAudioCategory*>(
+                   qvariant_cast<QObject*>(m_categories[sound->category()]));
+    }
+    sound->setCategoryObject(category);
+
+    QDeclarativeAttenuationModel *attenuationModel = 0;
+    if (sound->attenuationModel().isEmpty()) {
+        if (m_defaultAttenuationModel)
+            attenuationModel = m_defaultAttenuationModel;
+    } else if (m_attenuationModels.contains(sound->attenuationModel())){
+        attenuationModel = m_attenuationModels[sound->attenuationModel()];
+    } else {
+        qWarning() << "Sound[" << sound->name() << "] contains invalid attenuationModel["
+                   << sound->attenuationModel() << "]";
+    }
+    sound->setAttenuationModelObject(attenuationModel);
+
+    foreach (QDeclarativePlayVariation* playVariation, sound->playlist()) {
+        if (m_samples.contains(playVariation->sample())) {
+            playVariation->setSampleObject(
+                        qobject_cast<QDeclarativeAudioSample*>(
+                        qvariant_cast<QObject*>(m_samples[playVariation->sample()])));
+        } else {
+            qWarning() << "Sound[" << sound->name() << "] contains invalid sample["
+                       << playVariation->sample() << "] for its playVarations";
+        }
+    }
+
+    if (!m_sounds.contains(sound->name())) {
+        qWarning() << "Adding sound in list -=-----" << sound->name() <<".";
+        m_sounds.insert(sound->name(), QVariant::fromValue(sound));
+    }
+}
+
 void QDeclarativeAudioEngine::componentComplete()
 {
 #ifdef DEBUG_AUDIOENGINE
@@ -246,7 +290,8 @@ void QDeclarativeAudioEngine::componentComplete()
             qWarning() << "accessing invalid sample[" << key << "]";
             continue;
         }
-        sample->init();
+
+        addAudioSample(sample);
     }
 
 #ifdef DEBUG_AUDIOENGINE
@@ -260,35 +305,8 @@ void QDeclarativeAudioEngine::componentComplete()
             qWarning() << "accessing invalid sound[" << key << "]";
             continue;
         }
-        QDeclarativeAudioCategory *category = m_defaultCategory;
-        if (m_categories.contains(sound->category())) {
-            category = qobject_cast<QDeclarativeAudioCategory*>(
-                       qvariant_cast<QObject*>(m_categories[sound->category()]));
-        }
-        sound->setCategoryObject(category);
 
-        QDeclarativeAttenuationModel *attenuationModel = 0;
-        if (sound->attenuationModel().isEmpty()) {
-            if (m_defaultAttenuationModel)
-                attenuationModel = m_defaultAttenuationModel;
-        } else if (m_attenuationModels.contains(sound->attenuationModel())){
-            attenuationModel = m_attenuationModels[sound->attenuationModel()];
-        } else {
-            qWarning() << "Sound[" << sound->name() << "] contains invalid attenuationModel["
-                       << sound->attenuationModel() << "]";
-        }
-        sound->setAttenuationModelObject(attenuationModel);
-
-        foreach (QDeclarativePlayVariation* playVariation, sound->playlist()) {
-            if (m_samples.contains(playVariation->sample())) {
-                playVariation->setSampleObject(
-                            qobject_cast<QDeclarativeAudioSample*>(
-                            qvariant_cast<QObject*>(m_samples[playVariation->sample()])));
-            } else {
-                qWarning() << "Sound[" << sound->name() << "] contains invalid sample["
-                           << playVariation->sample() << "] for its playVarations";
-            }
-        }
+        addSound(sound);
     }
     m_complete = true;
 #ifdef DEBUG_AUDIOENGINE
