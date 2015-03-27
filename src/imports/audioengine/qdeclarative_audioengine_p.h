@@ -121,6 +121,8 @@ public:
 
     Q_INVOKABLE void addAudioSample(QDeclarativeAudioSample*);
     Q_INVOKABLE void addSound(QDeclarativeSound*);
+    Q_INVOKABLE void addAudioCategory(QDeclarativeAudioCategory*);
+    Q_INVOKABLE void addAttenuationModel(QDeclarativeAttenuationModel*);
 
 Q_SIGNALS:
     void ready();
@@ -160,6 +162,10 @@ private:
     QList<QDeclarativeSoundInstance*> m_managedDeclSoundInstances;
     QList<QDeclarativeSoundInstance*> m_managedDeclSndInstancePool;
     void releaseManagedDeclarativeSoundInstance(QDeclarativeSoundInstance* declSndInstance);
+
+    void initAudioSample(QDeclarativeAudioSample*);
+    void initSound(QDeclarativeSound*);
+
 };
 
 QT_END_NAMESPACE

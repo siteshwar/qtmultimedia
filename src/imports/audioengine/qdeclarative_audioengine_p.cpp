@@ -229,12 +229,12 @@ void QDeclarativeAudioEngine::releaseSoundInstance(QSoundInstance* instance)
     emit liveInstanceCountChanged();
 }
 
-void QDeclarativeAudioEngine::addAudioSample(QDeclarativeAudioSample *sample)
+void QDeclarativeAudioEngine::initAudioSample(QDeclarativeAudioSample *sample)
 {
     sample->init();
 }
 
-void QDeclarativeAudioEngine::addSound(QDeclarativeSound *sound)
+void QDeclarativeAudioEngine::initSound(QDeclarativeSound *sound)
 {
     qWarning() << "ADDING SOUND";
     QDeclarativeAudioCategory *category = m_defaultCategory;
@@ -266,11 +266,70 @@ void QDeclarativeAudioEngine::addSound(QDeclarativeSound *sound)
                        << playVariation->sample() << "] for its playVarations";
         }
     }
+}
 
-    if (!m_sounds.contains(sound->name())) {
-        qWarning() << "Adding sound in list -=-----" << sound->name() <<".";
-        m_sounds.insert(sound->name(), QVariant::fromValue(sound));
+void QDeclarativeAudioEngine::addAudioSample(QDeclarativeAudioSample *sample)
+{
+#ifdef DEBUG_AUDIOENGINE
+    qDebug() << "add QDeclarativeAudioSample[" << sample->name() << "]";
+#endif
+    if (m_samples.contains(sample->name())) {
+        qWarning() << "Failed to add AudioSample[" << sample->name() << "], already exists!";
+        return;
     }
+    m_samples.insert(sample->name(), QVariant::fromValue(sample));
+
+    if (m_complete) {
+        initAudioSample(sample);
+    }
+}
+
+void QDeclarativeAudioEngine::addSound(QDeclarativeSound *sound)
+{
+#ifdef DEBUG_AUDIOENGINE
+    qDebug() << "add QDeclarativeSound[" << sound->name() << "]";
+#endif
+    if (m_sounds.contains(sound->name())) {
+        qWarning() << "Failed to add Sound[" << sound->name() << "], already exists!";
+        return;
+    }
+    m_sounds.insert(sound->name(), QVariant::fromValue(sound));
+
+    qWarning() << "Adding sound in list -=-----" << sound->name() <<".";
+
+    if (m_complete) {
+        initSound(sound);
+    }
+}
+
+void QDeclarativeAudioEngine::addAudioCategory(QDeclarativeAudioCategory* category)
+{
+#ifdef DEBUG_AUDIOENGINE
+    qDebug() << "add QDeclarativeAudioCategory[" << category->name() << "]";
+#endif
+    if (m_categories.contains(category->name())) {
+        qWarning() << "Failed to add AudioCategory[" << category->name() << "], already exists!";
+        return;
+    }
+    m_categories.insert(category->name(), QVariant::fromValue(category));
+    if (category->name() == QLatin1String("default")) {
+        m_defaultCategory = category;
+    }
+}
+
+void QDeclarativeAudioEngine::addAttenuationModel(QDeclarativeAttenuationModel* attenModel)
+{
+#ifdef DEBUG_AUDIOENGINE
+    qDebug() << "add AttenuationModel[" << attenModel->name() << "]";
+#endif
+    if (attenModel->name() == QLatin1String("default")) {
+        m_defaultAttenuationModel = attenModel;
+    }
+    if (m_attenuationModels.contains(attenModel->name())) {
+        qWarning() << "Failed to add AttenuationModel[" << attenModel->name() << "], already exists!";
+        return;
+    }
+    m_attenuationModels.insert(attenModel->name(), attenModel);
 }
 
 void QDeclarativeAudioEngine::componentComplete()
@@ -299,7 +358,7 @@ void QDeclarativeAudioEngine::componentComplete()
             continue;
         }
 
-        addAudioSample(sample);
+        initAudioSample(sample);
     }
 
 #ifdef DEBUG_AUDIOENGINE
@@ -314,7 +373,7 @@ void QDeclarativeAudioEngine::componentComplete()
             continue;
         }
 
-        addSound(sound);
+        initSound(sound);
     }
     m_complete = true;
 #ifdef DEBUG_AUDIOENGINE
@@ -362,58 +421,25 @@ void QDeclarativeAudioEngine::appendFunction(QQmlListProperty<QObject> *property
 
     QDeclarativeSound *sound = qobject_cast<QDeclarativeSound*>(value);
     if (sound) {
-#ifdef DEBUG_AUDIOENGINE
-        qDebug() << "add QDeclarativeSound[" << sound->name() << "]";
-#endif
-        if (engine->m_sounds.contains(sound->name())) {
-            qWarning() << "Failed to add Sound[" << sound->name() << "], already exists!";
-            return;
-        }
-        engine->m_sounds.insert(sound->name(), QVariant::fromValue(value));
+        engine->addSound(sound);
         return;
     }
 
     QDeclarativeAudioSample *sample = qobject_cast<QDeclarativeAudioSample*>(value);
     if (sample) {
-#ifdef DEBUG_AUDIOENGINE
-        qDebug() << "add QDeclarativeAudioSample[" << sample->name() << "]";
-#endif
-        if (engine->m_samples.contains(sample->name())) {
-            qWarning() << "Failed to add AudioSample[" << sample->name() << "], already exists!";
-            return;
-        }
-        engine->m_samples.insert(sample->name(), QVariant::fromValue(value));
+        engine->addAudioSample(sample);
         return;
     }
 
     QDeclarativeAudioCategory *category = qobject_cast<QDeclarativeAudioCategory*>(value);
     if (category) {
-#ifdef DEBUG_AUDIOENGINE
-        qDebug() << "add QDeclarativeAudioCategory[" << category->name() << "]";
-#endif
-        if (engine->m_categories.contains(category->name())) {
-            qWarning() << "Failed to add AudioCategory[" << category->name() << "], already exists!";
-            return;
-        }
-        engine->m_categories.insert(category->name(), QVariant::fromValue(value));
-        if (category->name() == QLatin1String("default")) {
-            engine->m_defaultCategory = category;
-        }
+        engine->addAudioCategory(category);
+        return;
     }
 
     QDeclarativeAttenuationModel *attenModel = qobject_cast<QDeclarativeAttenuationModel*>(value);
     if (attenModel) {
-#ifdef DEBUG_AUDIOENGINE
-        qDebug() << "add AttenuationModel[" << attenModel->name() << "]";
-#endif
-        if (attenModel->name() == QLatin1String("default")) {
-            engine->m_defaultAttenuationModel = attenModel;
-        }
-        if (engine->m_attenuationModels.contains(attenModel->name())) {
-            qWarning() << "Failed to add AttenuationModel[" << attenModel->name() << "], already exists!";
-            return;
-        }
-        engine->m_attenuationModels.insert(attenModel->name(), attenModel);
+        engine->addAttenuationModel(attenModel);
         return;
     }
 
