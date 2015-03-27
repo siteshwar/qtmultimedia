@@ -304,8 +304,10 @@ void QDeclarativeAudioEngine::addAudioCategory(QDeclarativeAudioCategory* catego
         return;
     }
     m_categories.insert(category->name(), QVariant::fromValue(category));
-    if (category->name() == QLatin1String("default")) {
+    if (category->name() == QLatin1String("default") && !m_complete) {
         m_defaultCategory = category;
+    } else if(category->name() == QLatin1String("default")) {
+        qWarning() << "Can not change default category after initializing engine";
     }
 }
 
@@ -314,14 +316,17 @@ void QDeclarativeAudioEngine::addAttenuationModel(QDeclarativeAttenuationModel* 
 #ifdef DEBUG_AUDIOENGINE
     qDebug() << "add AttenuationModel[" << attenModel->name() << "]";
 #endif
-    if (attenModel->name() == QLatin1String("default")) {
-        m_defaultAttenuationModel = attenModel;
-    }
     if (m_attenuationModels.contains(attenModel->name())) {
         qWarning() << "Failed to add AttenuationModel[" << attenModel->name() << "], already exists!";
         return;
     }
     m_attenuationModels.insert(attenModel->name(), attenModel);
+
+    if (attenModel->name() == QLatin1String("default") && !m_complete) {
+        m_defaultAttenuationModel = attenModel;
+    } else if(attenModel->name() == QLatin1String("default")) {
+        qWarning() << "Can not change default attenuation model after initializing engine";
+    }
 }
 
 void QDeclarativeAudioEngine::componentComplete()
