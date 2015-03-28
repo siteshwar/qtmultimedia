@@ -15,6 +15,8 @@ BuildRequires:  qt5-qtdeclarative-qtquick-devel
 BuildRequires:  qt5-qmake
 BuildRequires:  pkgconfig(alsa)
 BuildRequires:  fdupes
+BuildRequires:  openal-soft
+BuildRequires:  openal-soft-devel
 BuildRequires:  pkgconfig(libpulse)
 BuildRequires:  pkgconfig(libpulse-mainloop-glib)
 BuildRequires:  pkgconfig(gstreamer-0.10)
