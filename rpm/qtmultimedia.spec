@@ -1,6 +1,6 @@
 Name:       qt5-qtmultimedia
 Summary:    Qt Multimedia module
-Version:    5.0.2
+Version:    5.2.2
 Release:    1%{?dist}
 Group:      Qt/Qt
 License:    LGPLv2.1 with exception or GPLv3
@@ -57,6 +57,15 @@ Requires:   qt5-qtdeclarative
 
 %description -n qt5-qtdeclarative-import-multimedia
 This package contains the Multimedia import for QtQml
+
+%package -n qt5-qtdeclarative-import-audioengine
+Summary:    QtQml import audioengine 
+Group:      Qt/Qt
+Requires:   %{name} = %{version}-%{release}
+Requires:   qt5-qtdeclarative
+
+%description -n qt5-qtdeclarative-import-audioengine
+This package contains the AudioEngine import for QtQml
 
 %package gsttools
 Summary:    Qt Multimedia - Utility library for GStreamer media services
@@ -126,7 +135,6 @@ Requires:   %{name} = %{version}-%{release}
 
 %description plugin-audio-pulseaudio
 This package contains the pulse audio sound effect support.
-
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -232,4 +240,8 @@ rm -rf %{buildroot}/%{_includedir}/qt5/Qt
 %files plugin-audio-pulseaudio
 %defattr(-,root,root,-)
 %{_libdir}/qt5/plugins/audio/libqtmedia_pulse.so
+
+%files -n qt5-qtdeclarative-import-audioengine
+%defattr(-,root,root,-)
+%{_libdir}/qt5/qml/QtAudioEngine/
 
