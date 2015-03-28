@@ -134,11 +134,11 @@ public Q_SLOTS:
         disconnect(m_sample, SIGNAL(error()), this, SLOT(decoderError()));
         disconnect(m_sample, SIGNAL(ready()), this, SLOT(sampleReady()));
 
-        if (m_sample->data().size() > 1024 * 1024 * 4) {
+        /*if (m_sample->data().size() > 1024 * 1024 * 4) {
             qWarning() << "source [" << m_url << "] size too large!";
             decoderError();
             return;
-        }
+        }*/
 
         if (m_sample->format().channelCount() > 2) {
             qWarning() << "source [" << m_url << "] channel > 2!";
